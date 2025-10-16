@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
         { id: 'future_controllability', label: '18. Bạn có tin rằng mình có thể thay đổi được kết quả của chuyện này trong tương lai không?', minLabel: '-1: Không thể thay đổi được nữa', maxLabel: '+1: Vẫn có thể thay đổi được' }
     ];
 
+    const form = document.getElementById('appraisal-form');
     const participantIdSpan = document.getElementById('participant-id');
     let studentId = manageStudentId();
     participantIdSpan.textContent = studentId;
@@ -39,10 +40,10 @@ document.addEventListener('DOMContentLoaded', function() {
     createEmotionSelectors();
     createAppraisalSliders();
 
-    const form = document.getElementById('appraisal-form');
     form.addEventListener('submit', handleSubmit);
-    
     document.getElementById('reset-btn').addEventListener('click', handleReset);
+
+    // --- CÁC HÀM LOGIC ---
 
     function manageStudentId() {
         const now = new Date().getTime();
@@ -161,21 +162,38 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // ==========================================================
+    // ===== CÁC THAY ĐỔI NẰM Ở 3 HÀM DƯỚI ĐÂY =====
+    // ==========================================================
+
+    /**
+     * Hàm này chứa logic reset form, không có hộp thoại xác nhận.
+     */
+    function performReset() {
+        form.reset();
+        document.querySelectorAll('.slider-value').forEach(span => span.textContent = '0.00');
+        document.querySelectorAll('#emotions-container .slider-value').forEach(span => span.textContent = '0');
+        const emotionSelects = document.querySelectorAll('#emotions-container select');
+        emotionSelects.forEach(select => {
+            const slider = document.getElementById(select.id.replace('emotion', 'intensity'));
+            slider.disabled = true;
+            slider.value = 0;
+        });
+        updateEmotionOptions(Array.from(emotionSelects));
+    }
+
+    /**
+     * Hàm này dành cho nút "Làm lại", sẽ hỏi xác nhận trước khi reset.
+     */
     function handleReset() {
         if (confirm("Bạn có chắc chắn muốn xóa toàn bộ thông tin đã nhập không?")) {
-            form.reset();
-            document.querySelectorAll('.slider-value').forEach(span => span.textContent = '0.00');
-            document.querySelectorAll('#emotions-container .slider-value').forEach(span => span.textContent = '0');
-            const emotionSelects = document.querySelectorAll('#emotions-container select');
-            emotionSelects.forEach(select => {
-                const slider = document.getElementById(select.id.replace('emotion', 'intensity'));
-                slider.disabled = true;
-                slider.value = 0;
-            });
-            updateEmotionOptions(Array.from(emotionSelects));
+            performReset();
         }
     }
     
+    /**
+     * Hàm gửi dữ liệu và tự động reset sau khi thành công.
+     */
     async function sendDataToGoogleSheet(data) {
         const submitBtn = document.getElementById('submit-btn');
         const originalBtnText = submitBtn.textContent;
@@ -191,8 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 redirect: 'follow'
             });
             alert("Gửi dữ liệu thành công! Cảm ơn bạn đã tham gia.");
-            form.reset();
-            handleReset(); 
+            performReset(); // Gọi trực tiếp hàm reset không cần hỏi
         } catch (error) {
             console.error('Error:', error);
             alert("Đã có lỗi xảy ra khi gửi dữ liệu. Vui lòng thử lại.");
@@ -202,28 +219,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // ==========================================================
-    // ===== HÀM NÀY ĐÃ ĐƯỢC CẬP NHẬT ĐỂ KIỂM TRA CẢM XÚC =====
-    // ==========================================================
     function handleSubmit(event) {
         event.preventDefault();
         
-        // --- BƯỚC 1: KIỂM TRA XEM CÓ CẢM XÚC NÀO ĐƯỢC CHỌN KHÔNG ---
         let isEmotionSelected = false;
         for (let i = 1; i <= 4; i++) {
             if (document.getElementById(`emotion-${i}`).value) {
                 isEmotionSelected = true;
-                break; // Dừng ngay khi tìm thấy một cảm xúc đã được chọn
+                break;
             }
         }
-
-        // Nếu không có cảm xúc nào được chọn, hiển thị thông báo và dừng lại
         if (!isEmotionSelected) {
             alert("Bạn phải chọn ít nhất một cảm xúc nổi bật để hoàn tất.");
             return; 
         }
 
-        // --- BƯỚC 2: THU THẬP DỮ LIỆU (NẾU ĐÃ HỢP LỆ) ---
         const data = {
             timestamp: new Date().toISOString(),
             participant_id: studentId,
@@ -245,7 +255,6 @@ document.addEventListener('DOMContentLoaded', function() {
             data[dim.id] = document.getElementById(dim.id).value;
         });
         
-        // --- BƯỚC 3: GỬI DỮ LIỆU ĐI ---
         sendDataToGoogleSheet(data);
     }
 });
