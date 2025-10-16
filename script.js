@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     
-    // URL Web App của bạn đã được cập nhật tại đây
+    // Dán URL Web App của bạn vào đây
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZuw43JdZ6l-dsdWMf1U3SvvTtLb-LsNqNCltmdaAb2dVCe8OUlreBFUwPzAxS7ZDk0Q/exec";
 
-    // --- CẤU HÌNH ---
+    // --- CẤU HÌNH (Không thay đổi) ---
     const STUDENT_ID_EXPIRATION_MINUTES = 60;
     const APPRAISAL_DIMENSIONS = [
         { id: 'goal_congruence', label: '1. Tình huống này giúp bạn đạt được điều bạn muốn, hay đang cản trở bạn?', minLabel: '-1: Cản trở mục tiêu của tôi', maxLabel: '+1: Giúp tôi đạt được mục tiêu' },
@@ -47,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function manageStudentId() {
         const now = new Date().getTime();
         let studentData = JSON.parse(localStorage.getItem('studentData'));
-
         if (studentData && (now < studentData.expiry)) {
             studentData.expiry = now + STUDENT_ID_EXPIRATION_MINUTES * 60 * 1000;
             localStorage.setItem('studentData', JSON.stringify(studentData));
@@ -77,7 +76,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('emotions-container');
         const emotions = ['Fear', 'Joy', 'Sadness', 'Anger'];
         const emotionSelects = []; 
-
         for (let i = 1; i <= 4; i++) {
             const group = document.createElement('div');
             group.className = 'emotion-group';
@@ -107,7 +105,6 @@ document.addEventListener('DOMContentLoaded', function() {
             group.appendChild(sliderWrapper);
             container.appendChild(group);
             emotionSelects.push(select); 
-
             select.addEventListener('change', () => {
                 slider.disabled = !select.value;
                 slider.value = 0;
@@ -184,11 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const originalBtnText = submitBtn.textContent;
         submitBtn.disabled = true;
         submitBtn.textContent = 'Đang gửi...';
-
         try {
-            // NOTE: fetch in 'no-cors' mode means we don't get a response back,
-            // but it allows the request to be sent to the Google Script.
-            // We assume success if the request doesn't throw an error.
             await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -197,11 +190,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify(data),
                 redirect: 'follow'
             });
-
             alert("Gửi dữ liệu thành công! Cảm ơn bạn đã tham gia.");
             form.reset();
-            handleReset(); // Call handleReset to visually update the form state
-
+            handleReset(); 
         } catch (error) {
             console.error('Error:', error);
             alert("Đã có lỗi xảy ra khi gửi dữ liệu. Vui lòng thử lại.");
@@ -211,16 +202,34 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // ==========================================================
+    // ===== HÀM NÀY ĐÃ ĐƯỢC CẬP NHẬT ĐỂ KIỂM TRA CẢM XÚC =====
+    // ==========================================================
     function handleSubmit(event) {
         event.preventDefault();
         
+        // --- BƯỚC 1: KIỂM TRA XEM CÓ CẢM XÚC NÀO ĐƯỢC CHỌN KHÔNG ---
+        let isEmotionSelected = false;
+        for (let i = 1; i <= 4; i++) {
+            if (document.getElementById(`emotion-${i}`).value) {
+                isEmotionSelected = true;
+                break; // Dừng ngay khi tìm thấy một cảm xúc đã được chọn
+            }
+        }
+
+        // Nếu không có cảm xúc nào được chọn, hiển thị thông báo và dừng lại
+        if (!isEmotionSelected) {
+            alert("Bạn phải chọn ít nhất một cảm xúc nổi bật để hoàn tất.");
+            return; 
+        }
+
+        // --- BƯỚC 2: THU THẬP DỮ LIỆU (NẾU ĐÃ HỢP LỆ) ---
         const data = {
             timestamp: new Date().toISOString(),
             participant_id: studentId,
             stimulus_id: document.getElementById('stimulus-id').value,
             trial_id: document.getElementById('trial-id').value,
         };
-
         let emotions = [];
         let intensities = [];
         for (let i = 1; i <= 4; i++) {
@@ -232,11 +241,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         data.primary_emotions = emotions.join(';');
         data.intensity_self_report = intensities.join(';');
-
         APPRAISAL_DIMENSIONS.forEach(dim => {
             data[dim.id] = document.getElementById(dim.id).value;
         });
         
+        // --- BƯỚC 3: GỬI DỮ LIỆU ĐI ---
         sendDataToGoogleSheet(data);
     }
 });
