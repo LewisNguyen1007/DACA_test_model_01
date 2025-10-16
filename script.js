@@ -31,8 +31,8 @@ document.addEventListener('DOMContentLoaded', function() {
     participantIdSpan.textContent = studentId;
 
     populateDropdown('stimulus-id', 
-        [...Array(8).keys()].map(i => `video_${String(i + 1).padStart(2, '0')}`), 
-        [...Array(2).keys()].map(i => `recall_${String(i + 1).padStart(2, '0')}`)
+        [...Array(10).keys()].map(i => `video_${String(i + 1).padStart(2, '0')}`), 
+        [...Array(10).keys()].map(i => `recall_${String(i + 1).padStart(2, '0')}`)
     );
     populateDropdown('trial-id', [...Array(9).keys()].map(i => i + 1));
     
