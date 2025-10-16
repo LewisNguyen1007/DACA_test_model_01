@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nghiên Cứu Thẩm Định Cảm Xúc</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Biểu mẫu Thẩm định Tình huống</h1>
+            <p>Vui lòng hoàn thành các mục dưới đây dựa trên trải nghiệm của bạn.</p>
+            <div class="participant-id-display">
+                <strong>Mã số của bạn:</strong> <span id="participant-id">Đang tải...</span>
+            </div>
+        </header>
+
+        <form id="appraisal-form">
+            <section class="form-section">
+                <h2>Thông tin chung</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="stimulus-id">Kích thích (Video/Hồi tưởng):</label>
+                        <select id="stimulus-id" name="stimulus-id" required>
+                            </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="trial-id">Lần thử (Trial):</label>
+                        <select id="trial-id" name="trial-id" required>
+                             </select>
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h2>Cảm xúc nổi bật</h2>
+                <p>Chọn tối đa 4 cảm xúc và đánh giá cường độ (0-100).</p>
+                <div id="emotions-container" class="form-grid-emotions">
+                    </div>
+            </section>
+
+            <section class="form-section">
+                <h2>Đánh giá chi tiết tình huống</h2>
+                <div id="appraisal-sliders-container">
+                    </div>
+            </section>
+            
+            <div class="form-actions">
+                <button type="submit" id="submit-btn">Nộp và Tải file CSV</button>
+                <button type="button" id="reset-btn">Làm lại</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
